@@ -10,6 +10,23 @@ from main.permissions import IsOwnerOrReadOnly
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer
 
 
+class WhoAmI(APIView):
+    """
+    Return the email of the authenticated user.
+    """
+    def get(self, request, format=None):
+        return Response({request.user.email})
+
+
+class WhatDoIHave(APIView):
+    """
+    Return all objects created by the authenticated user.
+    """
+    def get(self, request, format=None):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -33,12 +50,12 @@ class BasicUserDetail(generics.RetrieveAPIView):
 class ProjectList(generics.ListAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    #permission_classes = [IsOwnerOrReadOnly]
 
     def post(self, request, format=None):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner_email=request.META["HTTP_X_EMAIL"])
+            serializer.save(owner_email=request.user.email)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -46,7 +63,7 @@ class ProjectList(generics.ListAPIView):
 class ProjectDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    #permission_classes = [IsOwnerOrReadOnly]
 
 
 
@@ -57,7 +74,7 @@ class AnnotationsJsonList(generics.ListAPIView):
     def post(self, request, format=None):
         serializer = AnnotationsJsonSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(image_id=request.data["image_id"], owner_email=request.META["HTTP_X_EMAIL"])
+            serializer.save(image_id=request.data["image_id"], owner_email=request.user.email)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,7 +97,7 @@ class ImageList(APIView):
     def post(self, request, format=None):
         serializer = ImageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(project_id=request.data["project_id"], owner_email=request.META["HTTP_X_EMAIL"])
+            serializer.save(project_id=request.data["project_id"], owner_email=request.user.email)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

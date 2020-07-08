@@ -14,7 +14,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # This backend is supposed to run behind a oauth proxy that puts
         # the authenticated user's email in X-EMAIL header. 
-        return obj.owner.email == request.META["HTTP_X_EMAIL"]
+        return obj.owner.email == request.user.email
 
 
 class IsOwnerOrRefuse(permissions.BasePermission):
@@ -23,4 +23,4 @@ class IsOwnerOrRefuse(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        return obj.owner.email == request.META["HTTP_X_EMAIL"]
+        return obj.owner.email == request.user.email

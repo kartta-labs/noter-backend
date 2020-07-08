@@ -4,16 +4,6 @@ from django.contrib.auth.models import User
 from main.models import Image, BasicUser, Project, AnnotationsJson
 
 
-class UserSerializer(serializers.ModelSerializer):
-    images_by_user = serializers.PrimaryKeyRelatedField(many=True, queryset=Image.objects.all())
-    projects_by_user = serializers.PrimaryKeyRelatedField(many=True, queryset=Project.objects.all())
-    annotations_by_user = serializers.PrimaryKeyRelatedField(many=True, queryset=AnnotationsJson.objects.all())
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'projects_by_user', 'images_by_user', 'annotations_by_user']
-
-
 class BasicUserSerializer(serializers.ModelSerializer):
     images_by_user = serializers.PrimaryKeyRelatedField(many=True, queryset=Image.objects.all())
     projects_by_user = serializers.PrimaryKeyRelatedField(many=True, queryset=Project.objects.all())
@@ -57,7 +47,7 @@ class ImageSerializer(serializers.ModelSerializer):
         project_id = validated_data.pop("project_id")
 
         return Image.objects.create(owner=owner, part_of_project=Project.objects.get(id=project_id), **validated_data)
-    
+
 
 class AnnotationsJsonSerializer(serializers.ModelSerializer):
     #images = serializers.PrimaryKeyRelatedField(many=True, queryset=Image.objects.all())
@@ -74,3 +64,17 @@ class AnnotationsJsonSerializer(serializers.ModelSerializer):
 
         return AnnotationsJson.objects.create(owner=owner, on_image=Image.objects.get(id=image_id), **validated_data)
     
+
+class UserSerializer(serializers.ModelSerializer):
+    images_by_user = ImageSerializer(read_only=True, many=True)
+    images_by_user_id = serializers.PrimaryKeyRelatedField(write_only=True, source='images_by_user', many=True, queryset=Image.objects.all())
+
+    projects_by_user = ProjectSerializer(read_only=True, many=True)
+    projects_by_user_id = serializers.PrimaryKeyRelatedField(write_only=True, source='projects_by_user', many=True, queryset=Project.objects.all())
+
+    annotations_by_user = AnnotationsJsonSerializer(read_only=True, many=True)
+    annotations_by_user_id = serializers.PrimaryKeyRelatedField(write_only=True, source='annotations_by_user', many=True, queryset=AnnotationsJson.objects.all())
+
+    class Meta:
+        model = User
+        fields = ['email', 'projects_by_user', 'projects_by_user_id', 'images_by_user', 'images_by_user_id', 'annotations_by_user', 'annotations_by_user_id']
