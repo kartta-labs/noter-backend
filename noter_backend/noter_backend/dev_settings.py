@@ -8,7 +8,7 @@ MIDDLEWARE.insert(0, 'main.middleware.DevXEmailMiddleware')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'main.dev_authentication.SessionAuthentication',
-        'main.dev_authentication.BasicAuthentication'
+        'main.authentication.NoCsrfSessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
     )
 }
