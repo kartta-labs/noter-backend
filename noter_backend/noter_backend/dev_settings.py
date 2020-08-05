@@ -15,6 +15,10 @@ limitations under the License.
 """
 from noter_backend.settings import *
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'n%n&-x^t7)60331uvy#stf-s20dvxd*m2^m3bvwjfh!m=11=sb'
+
+ALLOWED_HOSTS = ['*']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ALLOWED_HOSTS = ['*']
