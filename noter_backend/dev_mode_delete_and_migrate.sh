@@ -15,6 +15,6 @@
 
 rm main/migrations/0*
 rm db.sqlite3
-./manage.py makemigrations
-./manage.py migrate
-./manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'dontusethispassword')"
+./manage.py makemigrations  --settings=noter_backend.dev_settings
+./manage.py migrate --settings=noter_backend.dev_settings
+./manage.py shell --settings=noter_backend.dev_settings -c "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'dontusethispassword')"
