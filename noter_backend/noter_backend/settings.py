@@ -85,11 +85,14 @@ WSGI_APPLICATION = 'noter_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('NOTER_DB_NAME', 'noter-backend'),
+        'USER': os.environ.get('NOTER_DB_USER', 'noter-backend'),
+        'PASSWORD': os.environ.get('NOTER_DB_PASSWORD', 'noter-backend'),
+        'HOST': os.environ.get('NOTER_DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('NOTER_DB_PORT', '5432'),
     }
 }
 
