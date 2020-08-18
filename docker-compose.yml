@@ -13,9 +13,14 @@ services:
 
   noter-backend:
     environment:
+      DJANGO_SETTINGS_MODULE: noter_backend.dev_settings
       DATABASE_URL: 'postgres://noter-backend:noter-backend@db:5432'
-      NOTER_MEDIA_DIR: '/media'
       NOTER_DB_HOST: 'db'
+      NOTER_GS_PROJECT_ID: ''
+      # If NOTER_GS_MEDIA_BUCKET_NAME is empty, local disk will be used.
+      # You may lose the data if the disk is not persistent!
+      NOTER_GS_MEDIA_BUCKET_NAME: ''
+
     build:
       context: .
       dockerfile: Dockerfile

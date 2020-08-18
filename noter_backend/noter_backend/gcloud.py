@@ -13,21 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from noter_backend.settings import *
+"""
+Extension to store media files on Google Cloud Storage.
+"""
+
+from django.conf import settings
+from storages.backends.gcloud import GoogleCloudStorage
+from storages.utils import setting
+from urllib.parse import urljoin
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'n%n&-x^t7)60331uvy#stf-s20dvxd*m2^m3bvwjfh!m=11=sb'
+class GoogleCloudMediaFileStorage(GoogleCloudStorage):
+    bucket_name = setting('GS_MEDIA_BUCKET_NAME')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ['*']
-CORS_ORIGIN_ALLOW_ALL = True
-MIDDLEWARE.insert(0, 'main.middleware.DevXEmailMiddleware')
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'main.authentication.NoCsrfSessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication'
-    )
-}
+    def url(self, name):
+        return urljoin(settings.MEDIA_URL, name)

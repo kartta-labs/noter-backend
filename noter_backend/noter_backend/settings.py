@@ -27,6 +27,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
+#SECRET_KEY = 'n%n&-x^t7)60331uvy#stf-s20dvxd*m2^m3bvwjfh!m=11=sb'
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -129,10 +132,17 @@ USE_L10N = True
 
 USE_TZ = True
 
+if os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME', ''):
+    DEFAULT_FILE_STORAGE = 'noter_backend.gcloud.GoogleCloudMediaFileStorage'
+    GS_PROJECT_ID = os.environ.get('NOTER_GS_PROJECT_ID', '')
+    GS_MEDIA_BUCKET_NAME = os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME', '')
+    MEDIA_URL = 'https://storage.googleapis.com/{}/'.format(GS_MEDIA_BUCKET_NAME)
+else:
+    # Use local disk.
+    # NOTE: If disk is not persistant, data may be lost.
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+STATIC_ROOT = 'static/'
 STATIC_URL = '/static/'
-MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'uploaded_media')
-MEDIA_URL = '/media/'
+MEDIA_ROOT = 'media/'
