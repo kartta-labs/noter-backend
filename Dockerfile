@@ -18,21 +18,34 @@
 # libraries. The source is on github at:
 # https://github.com/GoogleCloudPlatform/python-docker
 
-FROM gcr.io/google_appengine/python
+FROM nginx
 
-# Create a virtualenv for the application dependencies.
-RUN virtualenv -p python3 /env
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y \
+        uwsgi-plugin-python3 \
+        python3-venv \
+        postgresql \
+        postgresql-contrib \
+        libpq-dev
+
+RUN useradd -ms /bin/bash kartta && \
+    rm -f /etc/nginx/fastcgi.conf /etc/nginx/fastcgi_params && \
+    rm -f /etc/nginx/snippets/fastcgi-php.conf /etc/nginx/snippets/snakeoil.conf
+
+# Create a virtualenv.
+RUN python3 -m venv env
 ENV PATH /env/bin:$PATH
 
 ADD . /noter-backend
 RUN /env/bin/pip install --upgrade pip && /env/bin/pip install -r /noter-backend/requirements.txt
 
-
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install -y \
-        postgresql \
-        postgresql-contrib
-
-# [END docker]
-
+# COPY etc/ssl /etc/nginx/ssl
+# COPY etc/snippets /etc/nginx/snippets
+RUN mkdir /etc/nginx/sites-available
+RUN mkdir /etc/nginx/sites-enabled
+COPY etc/nginx.conf /etc/nginx/nginx.conf
+COPY etc/noter.conf /etc/nginx/sites-available/noter.conf
+RUN ln -s /etc/nginx/sites-available/noter.conf /etc/nginx/sites-enabled/noter.conf
+# COPY etc/supervisord.conf /etc/supervisord.conf
+# COPY etc/uwsgi.ini /etc/uwsgi/wsgi.ini
