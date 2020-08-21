@@ -132,6 +132,26 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+
 if os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME', ''):
     DEFAULT_FILE_STORAGE = 'noter_backend.gcloud.GoogleCloudMediaFileStorage'
     GS_PROJECT_ID = os.environ.get('NOTER_GS_PROJECT_ID', '')

@@ -14,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from rest_framework import permissions
+import copy
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
+class IsOwnerOrReadOnly(permissions.DjangoModelPermissions):
     """
     Custom permission to only allow owners of an object to edit it.
     """
+
+    def has_permission(self, request, view):
+        return True
 
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request,
@@ -27,15 +31,18 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # This backend is supposed to run behind a oauth proxy that puts
-        # the authenticated user's email in X-EMAIL header. 
         return obj.owner.email == request.user.email
 
 
-class IsOwnerOrRefuse(permissions.BasePermission):
+class IsOwnerAndReadOnlyOrRefuse(permissions.DjangoModelPermissions):
     """
-    Custom permission to only allow owners of an object to edit or see it.
+    Custom permission to only allow owners of an object to view.
     """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return False
 
     def has_object_permission(self, request, view, obj):
-        return obj.owner.email == request.user.email
+        return request.user == obj.owner

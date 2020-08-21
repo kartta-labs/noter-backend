@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from django.http import Http404
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -21,7 +22,7 @@ from rest_framework import status, generics
 from django.contrib.auth.models import User
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
-from main.permissions import IsOwnerOrReadOnly
+from main.permissions import IsOwnerAndReadOnlyOrRefuse
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer
 
 
@@ -31,6 +32,28 @@ class WhoAmI(APIView):
     """
     def get(self, request, format=None):
         return Response({request.user.email})
+
+
+class GetImage(APIView):
+    permission_classes = [IsOwnerAndReadOnlyOrRefuse]
+
+    def get_object(self, pk):
+        try:
+            image = Image.objects.get(pk=pk)
+            self.check_object_permissions(self.request, image)
+            return image
+        except Image.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        image = self.get_object(pk)
+        serializer = ImageSerializer(image)
+
+        response = Response(status=200)
+        response['Content-Type'] = ''
+        path = serializer.data["image"].strip("/").split('/')[-1]
+        response['X-Accel-Redirect'] = '/protected_media/' + path
+        return response
 
 
 class WhatDoIHave(APIView):
