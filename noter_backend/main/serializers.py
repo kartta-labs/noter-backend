@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
 
@@ -43,11 +43,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'name', 'owner', 'labels_json']
-   
+
     def create(self, validated_data, *args, **kwargs):
         owner = get_or_create_authenticated_user(validated_data)
         return Project.objects.create(owner=owner, **validated_data)
-    
+
 
 class ImageSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.email')
@@ -72,13 +72,23 @@ class AnnotationsJsonSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnotationsJson
         fields = ['id', 'owner', 'content_json', "image_id"]
-    
+
     def create(self, validated_data, *args, **kwargs):
         owner = get_or_create_authenticated_user(validated_data)
         image_id = validated_data.pop("image_id")
 
         return AnnotationsJson.objects.create(owner=owner, on_image=Image.objects.get(id=image_id), **validated_data)
-    
+
+
+class GroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Group
+        fields = ['id','name',]
+
+    def create(self, validated_data, *args, **kwargs):
+        return Group.objects.create(**validated_data)
+
 
 class UserSerializer(serializers.ModelSerializer):
     images_by_user = ImageSerializer(read_only=True, many=True)
@@ -90,6 +100,8 @@ class UserSerializer(serializers.ModelSerializer):
     annotations_by_user = AnnotationsJsonSerializer(read_only=True, many=True)
     annotations_by_user_id = serializers.PrimaryKeyRelatedField(write_only=True, source='annotations_by_user', many=True, queryset=AnnotationsJson.objects.all())
 
+    groups = GroupSerializer(many=True)
+
     class Meta:
         model = User
-        fields = ['email', 'projects_by_user', 'projects_by_user_id', 'images_by_user', 'images_by_user_id', 'annotations_by_user', 'annotations_by_user_id']
+        fields = ['email', 'projects_by_user', 'projects_by_user_id', 'images_by_user', 'images_by_user_id', 'annotations_by_user', 'annotations_by_user_id', 'groups',]

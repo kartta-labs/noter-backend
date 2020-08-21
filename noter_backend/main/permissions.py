@@ -46,3 +46,17 @@ class IsOwnerAndReadOnlyOrRefuse(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):
         return request.user == obj.owner
+
+
+class IsReadOnlyAndHasAccessOrRefuse(permissions.DjangoModelPermissions):
+    """
+    Custom permission to only allow some users to view object.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.has_perm('view_obj', obj)

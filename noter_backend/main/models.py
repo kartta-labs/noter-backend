@@ -49,6 +49,11 @@ class Image(models.Model):
     description = models.TextField(blank=True, default="")
     image = models.ImageField("Image", upload_to=generate_uuid_filename)
 
+    class Meta:
+        permissions = (
+            ('view_obj', 'View this object'),
+        )
+
 
 class AnnotationsJson(models.Model):
     on_image = models.ForeignKey(Image, related_name="annotations_by_image", on_delete=models.SET_NULL, null=True)

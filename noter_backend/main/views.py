@@ -19,11 +19,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+from guardian.shortcuts import assign_perm, remove_perm
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
-from main.permissions import IsOwnerAndReadOnlyOrRefuse
-from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer
+from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse
+from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer, GroupSerializer
 
 
 class WhoAmI(APIView):
@@ -34,8 +35,15 @@ class WhoAmI(APIView):
         return Response({request.user.email})
 
 
+def get_object_or_404(Model, pk):
+    try:
+        model = Model.objects.get(pk=pk)
+        return model
+    except Image.DoesNotExist:
+        raise Http404
+
 class GetImage(APIView):
-    permission_classes = [IsOwnerAndReadOnlyOrRefuse]
+    permission_classes = [IsOwnerAndReadOnlyOrRefuse | IsReadOnlyAndHasAccessOrRefuse]
 
     def get_object(self, pk):
         try:
@@ -56,6 +64,29 @@ class GetImage(APIView):
         return response
 
 
+class ShareImages(APIView):
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def post(self, request, format=None):
+        if "image_ids" not in request.data or "group_ids" not in request.data:
+            return Response(status=400)
+
+        for image in Image.objects.filter(id__in=request.data["image_ids"]):
+            self.check_object_permissions(self.request, image)
+            for group in Group.objects.filter(id__in=request.data["group_ids"]):
+                assign_perm('view_obj', group, image)
+        return Response(status=200)
+
+    def delete(self, request, format=None):
+        if "image_ids" not in request.data or "group_ids" not in request.data:
+            return Response(status=400)
+
+        for image in Image.objects.filter(id__in=request.data["image_ids"]):
+            self.check_object_permissions(self.request, image)
+            for group in Group.objects.filter(id__in=request.data["group_ids"]):
+                remove_perm('view_obj', group, image)
+        return Response(status=200)
+
 class WhatDoIHave(APIView):
     """
     Return all objects created by the authenticated user.
@@ -73,6 +104,23 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class GroupList(APIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def post(self, request, format=None):
+        serializer = GroupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GroupDetail(generics.RetrieveAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
 
 
 class BasicUserList(generics.ListAPIView):
@@ -97,6 +145,16 @@ class ProjectList(generics.ListAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class JoinGroup(APIView):
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, pk= group_id)
+        request.user.groups.add(group)
+        return Response(status=200)
+
+    def delete(self, request, group_id):
+        group = get_object_or_404(Group, pk= group_id)
+        request.user.groups.remove(group)
+        return Response(status=200)
 
 class ProjectDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
