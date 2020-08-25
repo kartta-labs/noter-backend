@@ -21,7 +21,7 @@ services:
       # You may lose the data if the disk is not persistent!
       PROTECTED_MEDIA_URL:
       NOTER_GS_MEDIA_BUCKET_NAME: ''
-      GOOGLE_APPLICATION_CREDENTIALS: /etc/google_cloud.json
+      GOOGLE_APPLICATION_CREDENTIALS: '/etc/google_cloud.json'
 
     build:
       context: .

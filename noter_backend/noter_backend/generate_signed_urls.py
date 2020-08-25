@@ -42,7 +42,7 @@ def generate_signed_url(service_account_file, bucket_name, object_name,
         sys.exit(1)
 
     escaped_object_name = quote(six.ensure_binary(object_name), safe=b'/~')
-    canonical_uri = '{}'.format(escaped_object_name)
+    canonical_uri = '/{}'.format(escaped_object_name)
 
     datetime_now = datetime.datetime.utcnow()
     request_timestamp = datetime_now.strftime('%Y%m%dT%H%M%SZ')

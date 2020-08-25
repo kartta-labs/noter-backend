@@ -63,14 +63,14 @@ class GetImage(APIView):
         response['Content-Type'] = ''
         response['Method'] = 'GET'
         path = serializer.data['image'].strip('/').split('/')[-1]
-        # response['X-Accel-Redirect'] = '/protected_media/' + filename
         if os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME','').strip():
-            filename = generate_signed_url(
+            path = generate_signed_url(
                 service_account_file=os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'),
                 http_method='GET', bucket_name=os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME'),
                 object_name=path, subresource='',
                 expiration=int(900))
-        response['X-Accel-Redirect'] = '/protected_media/' + path
+
+        response['X-Accel-Redirect'] = '/protected_media/' + path.strip('/')
         return response
 
 
