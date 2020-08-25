@@ -78,13 +78,18 @@ class ShareImages(APIView):
     permission_classes = [IsOwnerOrReadOnly]
 
     def post(self, request, format=None):
-        if 'image_ids' not in request.data or 'group_ids' not in request.data:
+        if 'image_ids' not in request.data or not ('group_ids' in request.data or ('public' in request.data and request.data['public'].lower() == 'true')):
             return Response(status=400)
 
         for image in Image.objects.filter(id__in=request.data['image_ids']):
             self.check_object_permissions(self.request, image)
-            for group in Group.objects.filter(id__in=request.data['group_ids']):
-                assign_perm('view_obj', group, image)
+
+            if request.data['public'].lower() == 'true':
+                public_group = Group.objects.get(id=1)
+                assign_perm('view_obj', public_group, image)
+            if 'group_ids' in request.data:
+                for group in Group.objects.filter(id__in=request.data['group_ids']):
+                    assign_perm('view_obj', group, image)
         return Response(status=200)
 
     def delete(self, request, format=None):
