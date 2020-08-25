@@ -25,7 +25,7 @@ from guardian.shortcuts import assign_perm, remove_perm
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
 from noter_backend.generate_signed_urls import generate_signed_url
-from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse, IsReadOnlyAndPublicOrRefuse
+from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse, IsReadOnlyAndPublicOrRefuse, IsOwnerOrRefuse
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer, GroupSerializer
 
 
@@ -75,7 +75,7 @@ class GetImage(APIView):
 
 
 class ShareImages(APIView):
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrRefuse]
 
     def post(self, request, format=None):
         if 'image_ids' not in request.data or not ('group_ids' in request.data or ('public' in request.data and request.data['public'].lower() == 'true')):
@@ -106,22 +106,24 @@ class WhatDoIHave(APIView):
     """
     Return all objects created by the authenticated user.
     """
+    permission_classes = [IsOwnerOrRefuse]
     def get(self, request, format=None):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
 
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
 
 
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+# class UserDetail(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
 
 
-class GroupList(APIView):
+
+class CreateGroup(APIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
@@ -129,29 +131,16 @@ class GroupList(APIView):
         serializer = GroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            group = get_object_or_404(Group, pk= serializer.data['id'])
+            request.user.groups.add(group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# class GroupDetail(generics.RetrieveAPIView):
+#     queryset = Group.objects.all()
+#     serializer_class = GroupSerializer
 
-class GroupDetail(generics.RetrieveAPIView):
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-
-
-class BasicUserList(generics.ListAPIView):
-    queryset = BasicUser.objects.all()
-    serializer_class = BasicUserSerializer
-
-
-class BasicUserDetail(generics.RetrieveAPIView):
-    queryset = BasicUser.objects.all()
-    serializer_class = BasicUserSerializer
-
-
-class ProjectList(generics.ListAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    #permission_classes = [IsOwnerOrReadOnly]
+class CreateProject(APIView):
 
     def post(self, request, format=None):
         serializer = ProjectSerializer(data=request.data)
@@ -160,21 +149,57 @@ class ProjectList(generics.ListAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class JoinGroup(APIView):
-    def post(self, request, group_id):
-        group = get_object_or_404(Group, pk= group_id)
-        request.user.groups.add(group)
+    @staticmethod
+    def get_user_or_404(email):
+        try:
+            user = User.objects.get(email=email)
+            return user
+        except User.DoesNotExist:
+            raise Http404
+
+    @staticmethod
+    def get_group_or_404(name):
+        try:
+            group = Group.objects.get(name=name)
+            return group
+        except User.DoesNotExist:
+            raise Http404
+
+    def post(self, request, group_name):
+        if not request.user.groups.filter(name=group_name).exists():
+            return Response(status=403)
+        if 'email' not in request.data:
+            return Response(status=400)
+
+        user = self.get_user_or_404(email = request.data['email'])
+        group = self.get_group_or_404(name=group_name)
+        user.groups.add(group)
         return Response(status=200)
 
-    def delete(self, request, group_id):
-        group = get_object_or_404(Group, pk= group_id)
-        request.user.groups.remove(group)
+    def delete(self, request, group_name):
+        if not request.user.groups.filter(name=group_name).exists():
+            return Response(status=403)
+        if 'email' not in request.data:
+            return Response(status=400)
+
+        user = self.get_user_or_404(email = request.data['email'])
+        group = self.get_group_or_404(name=group_name)
+        user.groups.remove(group)
         return Response(status=200)
+
 
 class ProjectDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    #permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, **filter)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 
@@ -217,24 +242,29 @@ class ImageDetail(APIView):
     """
     Retrieve, update or delete a image instance.
     """
+    permission_classes = [IsOwnerOrRefuse]
+
     def get_object(self, pk):
         try:
-            return Image.objects.get(pk=pk)
+            image = Image.objects.get(pk=pk)
+            self.check_object_permissions(self.request, image)
+            return image
         except Image.DoesNotExist:
             raise Http404
+
 
     def get(self, request, pk, format=None):
         image = self.get_object(pk)
         serializer = ImageSerializer(image)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        image = self.get_object(pk)
-        serializer = ImageSerializer(image, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def put(self, request, pk, format=None):
+    #     image = self.get_object(pk)
+    #     serializer = ImageSerializer(image, data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         image = self.get_object(pk)

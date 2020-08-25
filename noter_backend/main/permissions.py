@@ -34,6 +34,17 @@ class IsOwnerOrReadOnly(permissions.DjangoModelPermissions):
 
         return obj.owner.email == request.user.email
 
+class IsOwnerOrRefuse(permissions.DjangoModelPermissions):
+    """
+    Custom permission to only allow owners of an object interact with it.
+    """
+
+    def has_permission(self, request, view):
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner.email == request.user.email
+
 
 class IsOwnerAndReadOnlyOrRefuse(permissions.DjangoModelPermissions):
     """
