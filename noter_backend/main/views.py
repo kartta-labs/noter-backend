@@ -25,7 +25,7 @@ from guardian.shortcuts import assign_perm, remove_perm
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
 from noter_backend.generate_signed_urls import generate_signed_url
-from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse
+from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse, IsReadOnlyAndPublicOrRefuse
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer, GroupSerializer
 
 
@@ -45,7 +45,7 @@ def get_object_or_404(Model, pk):
         raise Http404
 
 class GetImage(APIView):
-    permission_classes = [IsOwnerAndReadOnlyOrRefuse | IsReadOnlyAndHasAccessOrRefuse]
+    permission_classes = [IsOwnerAndReadOnlyOrRefuse | IsReadOnlyAndHasAccessOrRefuse | IsReadOnlyAndPublicOrRefuse]
 
     def get_object(self, pk):
         try:

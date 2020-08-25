@@ -7,6 +7,8 @@ done
 python3 /noter-backend/noter_backend/manage.py makemigrations
 python3 /noter-backend/noter_backend/manage.py migrate
 python3 /noter-backend/noter_backend/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'dontusethispassword')"
+python3 /noter-backend/noter_backend/manage.py shell < /noter-backend/late_migrate.py
+
 # /usr/local/bin/supervisord
 # uwsgi /noter-backend/etc/uwsgi.ini
 

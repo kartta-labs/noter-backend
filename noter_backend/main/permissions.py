@@ -15,6 +15,7 @@ limitations under the License.
 """
 from rest_framework import permissions
 import copy
+from django.contrib.auth.models import User
 
 
 class IsOwnerOrReadOnly(permissions.DjangoModelPermissions):
@@ -60,3 +61,18 @@ class IsReadOnlyAndHasAccessOrRefuse(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):
         return request.user.has_perm('view_obj', obj)
+
+class IsReadOnlyAndPublicOrRefuse(permissions.DjangoModelPermissions):
+    """
+    Custom permission to allow viewing public objects.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        anonymous = User.objects.get(email='anonymous@public.user')
+        return anonymous.has_perm('view_obj', obj)
+
