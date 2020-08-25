@@ -19,7 +19,9 @@ services:
       NOTER_GS_PROJECT_ID: ''
       # If NOTER_GS_MEDIA_BUCKET_NAME is empty, local disk will be used.
       # You may lose the data if the disk is not persistent!
+      PROTECTED_MEDIA_URL:
       NOTER_GS_MEDIA_BUCKET_NAME: ''
+      GOOGLE_APPLICATION_CREDENTIALS: /etc/google_cloud.json
 
     build:
       context: .

@@ -1,18 +1,19 @@
 """
 Copyright 2020 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the 'License');
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
      https://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
+distributed under the License is distributed on an 'AS IS' BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 from django.http import Http404
 
 from rest_framework.views import APIView
@@ -23,6 +24,7 @@ from django.contrib.auth.models import User, Group
 from guardian.shortcuts import assign_perm, remove_perm
 
 from main.models import Image, BasicUser, Project, AnnotationsJson
+from noter_backend.generate_signed_urls import generate_signed_url
 from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer, GroupSerializer
 
@@ -59,7 +61,15 @@ class GetImage(APIView):
 
         response = Response(status=200)
         response['Content-Type'] = ''
-        path = serializer.data["image"].strip("/").split('/')[-1]
+        response['Method'] = 'GET'
+        path = serializer.data['image'].strip('/').split('/')[-1]
+        # response['X-Accel-Redirect'] = '/protected_media/' + filename
+        if os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME','').strip():
+            filename = generate_signed_url(
+                service_account_file=os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'),
+                http_method='GET', bucket_name=os.environ.get('NOTER_GS_MEDIA_BUCKET_NAME'),
+                object_name=path, subresource='',
+                expiration=int(900))
         response['X-Accel-Redirect'] = '/protected_media/' + path
         return response
 
@@ -68,22 +78,22 @@ class ShareImages(APIView):
     permission_classes = [IsOwnerOrReadOnly]
 
     def post(self, request, format=None):
-        if "image_ids" not in request.data or "group_ids" not in request.data:
+        if 'image_ids' not in request.data or 'group_ids' not in request.data:
             return Response(status=400)
 
-        for image in Image.objects.filter(id__in=request.data["image_ids"]):
+        for image in Image.objects.filter(id__in=request.data['image_ids']):
             self.check_object_permissions(self.request, image)
-            for group in Group.objects.filter(id__in=request.data["group_ids"]):
+            for group in Group.objects.filter(id__in=request.data['group_ids']):
                 assign_perm('view_obj', group, image)
         return Response(status=200)
 
     def delete(self, request, format=None):
-        if "image_ids" not in request.data or "group_ids" not in request.data:
+        if 'image_ids' not in request.data or 'group_ids' not in request.data:
             return Response(status=400)
 
-        for image in Image.objects.filter(id__in=request.data["image_ids"]):
+        for image in Image.objects.filter(id__in=request.data['image_ids']):
             self.check_object_permissions(self.request, image)
-            for group in Group.objects.filter(id__in=request.data["group_ids"]):
+            for group in Group.objects.filter(id__in=request.data['group_ids']):
                 remove_perm('view_obj', group, image)
         return Response(status=200)
 
@@ -170,7 +180,7 @@ class AnnotationsJsonList(generics.ListAPIView):
     def post(self, request, format=None):
         serializer = AnnotationsJsonSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(image_id=request.data["image_id"], owner_email=request.user.email)
+            serializer.save(image_id=request.data['image_id'], owner_email=request.user.email)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -193,7 +203,7 @@ class ImageList(APIView):
     def post(self, request, format=None):
         serializer = ImageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(project_id=request.data["project_id"], owner_email=request.user.email)
+            serializer.save(project_id=request.data['project_id'], owner_email=request.user.email)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

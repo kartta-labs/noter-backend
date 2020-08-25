@@ -45,7 +45,8 @@ RUN /env/bin/pip install --upgrade pip && /env/bin/pip install -r /noter-backend
 RUN mkdir /etc/nginx/sites-available
 RUN mkdir /etc/nginx/sites-enabled
 COPY etc/nginx.conf /etc/nginx/nginx.conf
-COPY etc/noter.conf /etc/nginx/sites-available/noter.conf
-RUN ln -s /etc/nginx/sites-available/noter.conf /etc/nginx/sites-enabled/noter.conf
+COPY etc/noter.conf.template /etc/nginx/sites-available/noter.conf.template
+
+COPY secrets/google_cloud.json /etc/google_cloud.json
 # COPY etc/supervisord.conf /etc/supervisord.conf
 # COPY etc/uwsgi.ini /etc/uwsgi/wsgi.ini

@@ -55,7 +55,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ['id', 'title', 'description', 'owner', 'project_id']
+        fields = ['id', 'title', 'description', 'owner', 'image', 'project_id']
 
     def create(self, validated_data, *args, **kwargs):
         owner = get_or_create_authenticated_user(validated_data)
