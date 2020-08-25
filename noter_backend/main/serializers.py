@@ -28,13 +28,14 @@ class BasicUserSerializer(serializers.ModelSerializer):
         model = BasicUser
         fields = ['id', 'display_name', 'email', 'projects_by_user', 'images_by_user', 'annotations_by_user']
 
-def get_or_create_authenticated_user(validated_data):
+
+def get_authenticated_user(validated_data):
     email = validated_data.pop("owner_email")
-    # owner, created = BasicUser.objects.get_or_create(email=email)
-    if not User.objects.filter(email=email).exists():
-        user = User.objects.create_user(email, email, email)
-        user.save()
+    # if not User.objects.filter(email=email).exists():
+    #     user = User.objects.create_user(email, email, email)
+    #     user.save()
     return User.objects.get(email=email)
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     # images = serializers.PrimaryKeyRelatedField(many=True, queryset=Image.objects.all())
@@ -45,7 +46,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'owner', 'labels_json']
 
     def create(self, validated_data, *args, **kwargs):
-        owner = get_or_create_authenticated_user(validated_data)
+        owner = get_authenticated_user(validated_data)
         return Project.objects.create(owner=owner, **validated_data)
 
 
@@ -58,9 +59,8 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'owner', 'image', 'project_id']
 
     def create(self, validated_data, *args, **kwargs):
-        owner = get_or_create_authenticated_user(validated_data)
+        owner = get_authenticated_user(validated_data)
         project_id = validated_data.pop("project_id")
-
         return Image.objects.create(owner=owner, part_of_project=Project.objects.get(id=project_id), **validated_data)
 
 
@@ -74,7 +74,7 @@ class AnnotationsJsonSerializer(serializers.ModelSerializer):
         fields = ['id', 'owner', 'content_json', "image_id"]
 
     def create(self, validated_data, *args, **kwargs):
-        owner = get_or_create_authenticated_user(validated_data)
+        owner = get_authenticated_user(validated_data)
         image_id = validated_data.pop("image_id")
 
         return AnnotationsJson.objects.create(owner=owner, on_image=Image.objects.get(id=image_id), **validated_data)

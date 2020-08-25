@@ -15,9 +15,10 @@ limitations under the License.
 """
 
 from django.contrib import auth
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
+import uuid
 
 
 # This backend app runs behinds a proxy that sets the X-EMAIL header to
@@ -29,13 +30,14 @@ class DevXEmailMiddleware(MiddlewareMixin):
         if 'HTTP_X_EMAIL' not in request.META:
             request.META['HTTP_X_EMAIL'] = "developer@example.com"
 
-
 def get_or_create_authenticated_user(request):
     email = request.META.pop('HTTP_X_EMAIL', None)
     if not email:
         return None
     if not User.objects.filter(email=email).exists():
-        user = User.objects.create_user(email, email, email)
+        user = User.objects.create_user(email, email, str(uuid.uuid4()))
+        group = Group.objects.get(id= 1)
+        user.groups.add(group)
         user.save()
     return User.objects.get(email=email)
 

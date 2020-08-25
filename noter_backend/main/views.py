@@ -41,7 +41,7 @@ def get_object_or_404(Model, pk):
     try:
         model = Model.objects.get(pk=pk)
         return model
-    except Image.DoesNotExist:
+    except Model.DoesNotExist:
         raise Http404
 
 class GetImage(APIView):
