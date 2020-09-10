@@ -42,14 +42,14 @@ class LookUp(APIView):
       return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
   
     response = Response(status.HTTP_200_OK)
-    response.data = []
+    response.data = {'candidates':[]}
     payload = {'footprint': request.data['footprint']}
     for endpoint in lookup_endpoints['endpoints']:
       # TODO: Send requests in parallel and wait for all.
       records = requests.get(endpoint, params=payload)
       if records.status_code == status.HTTP_200_OK:
         try:
-          response.data.append(records.json()['data'])
+          response.data['candidates'].append({'from':endpoint ,'urls':records.json()['data']})
         except:
           pass
     response['Content-Type'] = 'application/json'
