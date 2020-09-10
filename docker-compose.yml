@@ -22,6 +22,7 @@ services:
       PROTECTED_MEDIA_URL:
       NOTER_GS_MEDIA_BUCKET_NAME: ''
       GOOGLE_APPLICATION_CREDENTIALS: '/etc/google_cloud.json'
+      NOTER_LOOKUP_ENDPOINTS_YAML: 'etc/lookup_endpoints.yaml'
 
     build:
       context: .

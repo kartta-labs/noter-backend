@@ -48,5 +48,8 @@ COPY etc/nginx.conf /etc/nginx/nginx.conf
 COPY etc/noter.conf.template /etc/nginx/sites-available/noter.conf.template
 
 COPY secrets/google_cloud.json /etc/google_cloud.json
+
+COPY secrets/lookup_endpoints.yaml /etc/lookup_endpoints.yaml
+
 # COPY etc/supervisord.conf /etc/supervisord.conf
 # COPY etc/uwsgi.ini /etc/uwsgi/wsgi.ini

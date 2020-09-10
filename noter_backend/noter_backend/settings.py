@@ -26,6 +26,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import yaml
 
 #SECRET_KEY = 'n%n&-x^t7)60331uvy#stf-s20dvxd*m2^m3bvwjfh!m=11=sb'
 
@@ -49,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'guardian',
     'rest_framework',
-    'main.apps.MainConfig'
+    'main.apps.MainConfig',
+    'looker.apps.LookerConfig'
 ]
 
 
@@ -167,6 +169,11 @@ else:
     # NOTE: If disk is not persistant, data may be lost.
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
+
+lookup_endpoints = {'endpoints':[]}
+if os.environ.get('NOTER_LOOKUP_ENDPOINTS_YAML', ''):
+    with open(os.environ.get('NOTER_LOOKUP_ENDPOINTS_YAML'), 'r') as stream:
+        lookup_endpoints = yaml.safe_load(stream)
 
 STATIC_ROOT = 'static/'
 STATIC_URL = '/static/'

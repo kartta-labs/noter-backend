@@ -1,0 +1,3 @@
+endpoints:
+  - 'https://a-url/a-prefix'
+  - 'https://another-url/another-prefix'

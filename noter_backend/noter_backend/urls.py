@@ -16,6 +16,7 @@ limitations under the License.
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from main import views
+from looker import views as looker_views
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -36,6 +37,7 @@ urlpatterns = [
     path('api/v0.1/groups/join/<str:group_name>/', views.JoinGroup.as_view()),
     path('api/v0.1/whoami/', views.WhoAmI.as_view()),
     path('download/<int:pk>/', views.GetImage.as_view()),
+    path('lookup/', looker_views.LookUp.as_view()),
     path('api/v0.1/whatdoihave/', views.WhatDoIHave.as_view()),
     path('admin/', admin.site.urls),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
