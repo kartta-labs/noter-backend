@@ -28,6 +28,13 @@ from noter_backend.generate_signed_urls import generate_signed_url
 from main.permissions import IsOwnerAndReadOnlyOrRefuse, IsOwnerOrReadOnly, IsReadOnlyAndHasAccessOrRefuse, IsReadOnlyAndPublicOrRefuse, IsOwnerOrRefuse
 from main.serializers import ImageSerializer, UserSerializer, BasicUserSerializer, ProjectSerializer, AnnotationsJsonSerializer, GroupSerializer
 
+import requests
+import tempfile
+from django.core.files import File
+from io import StringIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from contextlib import closing
+import mimetypes
 
 class WhoAmI(APIView):
     """
@@ -231,6 +238,26 @@ class ImageList(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        # if request has "url" field, the image data should be downloaded first
+        # and then replace request.data['image'] with downloaded image data.
+        if "url" in request.data:
+          image_url = request.data['url']
+          file_name = image_url.split('?')[0] # remove the extra parameter if there after '?'
+          file_name = file_name.split('/')[-1]
+          content_type = mimetypes.guess_type(file_name)
+          data_file = tempfile.NamedTemporaryFile()
+          CHUNK_SIZE = 1024
+          with closing(requests.get(image_url, stream=True)) as r:
+            for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
+              if chunk:
+                data_file.write(chunk)
+          data_file.seek(os.SEEK_SET, os.SEEK_END)
+          size = os.path.getsize(data_file.name)
+          data_file.seek(os.SEEK_SET)
+          download_file = InMemoryUploadedFile(data_file, 'data_file', file_name, content_type,
+                                             size, None)
+          request.data['image'] = download_file
+
         serializer = ImageSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(project_id=request.data['project_id'], owner_email=request.user.email)

@@ -35,7 +35,7 @@ from main.serializers import ImageSerializer, UserSerializer, BasicUserSerialize
 
 
 class LookUp(APIView):
-  def get(self, request, format=None):
+  def post(self, request, format=None):
     if 'footprint' not in request.data:
       return Response(status=status.HTTP_400_BAD_REQUEST)
     if not lookup_endpoints['endpoints']:
