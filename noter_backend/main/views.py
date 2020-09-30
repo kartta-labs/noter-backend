@@ -232,10 +232,6 @@ class ImageList(APIView):
     """
     List all images, or create a new image.
     """
-    def get(self, request, format=None):
-        images = Image.objects.all()
-        serializer = ImageSerializer(images, many=True)
-        return Response(serializer.data)
 
     def post(self, request, format=None):
         # if request has "url" field, the image data should be downloaded first
@@ -261,6 +257,11 @@ class ImageList(APIView):
         serializer = ImageSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(project_id=request.data['project_id'], owner_email=request.user.email)
+            # make this image public if request asks so
+            if 'public' in request.data and request.data['public'].lower() == 'true':
+              image = Image.objects.get(pk=serializer.data['id'])
+              public_group = Group.objects.get(id=1)
+              assign_perm('view_obj', public_group, image)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -269,7 +270,7 @@ class ImageDetail(APIView):
     """
     Retrieve, update or delete a image instance.
     """
-    permission_classes = [IsOwnerOrRefuse]
+    permission_classes = [IsOwnerAndReadOnlyOrRefuse | IsReadOnlyAndHasAccessOrRefuse | IsReadOnlyAndPublicOrRefuse]
 
     def get_object(self, pk):
         try:
