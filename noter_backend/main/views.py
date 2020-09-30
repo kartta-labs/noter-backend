@@ -270,7 +270,7 @@ class ImageDetail(APIView):
     """
     Retrieve, update or delete a image instance.
     """
-    permission_classes = [IsOwnerAndReadOnlyOrRefuse | IsReadOnlyAndHasAccessOrRefuse | IsReadOnlyAndPublicOrRefuse]
+    permission_classes = [IsOwnerOrRefuse | IsReadOnlyAndHasAccessOrRefuse | IsReadOnlyAndPublicOrRefuse]
 
     def get_object(self, pk):
         try:
