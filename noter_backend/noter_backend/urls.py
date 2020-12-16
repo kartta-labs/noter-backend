@@ -24,7 +24,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('api/v0.1/images/', views.ImageList.as_view()),
-    path('api/v0.1/images/<int:pk>/', views.ImageDetail.as_view()),
+    # path('api/v0.1/images/<int:pk>/', views.ImageDetail.as_view()),
     path('api/v0.1/share/', views.ShareImages.as_view()),
     path('api/v0.1/projects/', views.CreateProject.as_view()),
     path('api/v0.1/projects/<int:pk>/', views.ProjectDetail.as_view()),
