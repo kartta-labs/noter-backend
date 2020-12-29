@@ -1,3 +1,4 @@
 endpoints:
+  - 'http://0.0.0.0:3001/api/v0.1/lookaround'
   - 'https://a-url/a-prefix'
   - 'https://another-url/another-prefix'
