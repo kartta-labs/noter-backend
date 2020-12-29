@@ -15,6 +15,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: noter_backend.dev_settings
       DATABASE_URL: 'postgres://noter-backend:noter-backend@db:5432'
+      NOTER_DB_NAME: 'noter'
       NOTER_DB_HOST: 'db'
       NOTER_GS_PROJECT_ID: ''
       # If NOTER_GS_MEDIA_BUCKET_NAME is empty, local disk will be used.
@@ -23,7 +24,7 @@ services:
       NOTER_GS_MEDIA_BUCKET_NAME: ''
       GOOGLE_APPLICATION_CREDENTIALS: '/etc/google_cloud.json'
       NOTER_LOOKUP_ENDPOINTS_YAML: 'etc/lookup_endpoints.yaml'
-
+      KARTTA_EDITOR_URL: 'https://re.city/e'
     build:
       context: .
       dockerfile: Dockerfile
