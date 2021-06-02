@@ -36,5 +36,5 @@ rsa==4.6
 six==1.15.0
 sqlparse==0.3.1
 supervisor==4.2.0
-urllib3==1.25.9
+urllib3==1.26.5
 Werkzeug==1.0.1
